@@ -62,12 +62,26 @@ impl<const LAYERS: usize> Model<Layer, LAYERS> {
 
 pub enum InitFunc {
     Zero,
-    Prng,
+    Prng {//todo range},
     XavierUniform,
 }
 
 impl<const LAYERS: usize> Arena<LAYERS> {
     pub fn init(&mut self, init: InitFunc, model: &Model<Layer, LAYERS>) {
-        todo!();
+        unsafe {
+            let mut element_ptr: *mut f64 = self.ptr.clone();
+            element_ptr = element_ptr
+                .with_addr(element_ptr.addr() + self.packed_endpoints[self.packed_endpoints.len()]);
+            while element_ptr.addr() > 0 {
+                element_ptr = element_ptr.byte_sub(size_of::<f64>());
+                match init {
+                    InitFunc::Zero => {
+                        element_ptr.write(0.0);
+                    }
+                    InitFunc::Prng => {}
+                    InitFunc::XavierUniform => {}
+                }
+            }
+        }
     }
 }
