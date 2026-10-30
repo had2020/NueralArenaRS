@@ -1,3 +1,4 @@
+use rand::random_range;
 use std::alloc::{Layout, alloc};
 
 /// This X union is a ideomatic way to specify elements per a layer.
@@ -62,7 +63,7 @@ impl<const LAYERS: usize> Model<Layer, LAYERS> {
 
 pub enum InitFunc {
     Zero,
-    Prng {//todo range},
+    Prng { min: f64, max: f64 },
     XavierUniform,
 }
 
@@ -78,8 +79,12 @@ impl<const LAYERS: usize> Arena<LAYERS> {
                     InitFunc::Zero => {
                         element_ptr.write(0.0);
                     }
-                    InitFunc::Prng => {}
-                    InitFunc::XavierUniform => {}
+                    InitFunc::Prng { min, max } => {
+                        element_ptr.write(random_range(min..max));
+                    }
+                    InitFunc::XavierUniform => {
+                        todo!();
+                    }
                 }
             }
         }
