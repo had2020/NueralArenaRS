@@ -15,7 +15,7 @@ fn main() {
             Layer { x: HIDDEN },
             Layer { x: OUTPUT },
         ],
-        activation_layout: [ActFn::Sigmoid, ActFn::Sigmoid, ActFn::Sigmoid],
+        activation_layout: [ActFn::Sigmoid, ActFn::Sigmoid, ActFn::Linear],
     };
     let mut arena_model = model.allocate();
     arena_model.init(InitFunc::Zero);
