@@ -8,7 +8,7 @@ const HIDDEN: usize = 8;
 const OUTPUT: usize = 1;
 
 fn main() {
-    let model: Model<Layer, LAYERS> = Model {
+    let model: ModelBuilder<Layer, LAYERS> = ModelBuilder {
         learning_rate: 0.1,
         memory_layout: [
             Layer { x: INPUTS },
@@ -18,5 +18,6 @@ fn main() {
         activation_layout: [ActFn::Sigmoid, ActFn::Sigmoid, ActFn::Sigmoid],
     };
     let mut arena_model = model.allocate();
-    arena_model.init(InitFunc::Zero, &model);
+    arena_model.init(InitFunc::Zero);
+    arena_model.forward_pass();
 }
