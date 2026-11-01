@@ -1,6 +1,7 @@
 use rand::random_range;
 use std::alloc::{Layout, alloc};
 use std::mem::size_of;
+use std::usize;
 
 /// This X union is a ideomatic way to specify elements per a layer.
 #[derive(Clone, Copy)]
@@ -30,23 +31,21 @@ pub enum InitFunc {
 /// This is simply a struct used to construct the memory arena.
 #[repr(align(64))]
 #[derive(Copy, Clone)]
-pub struct ModelBuilder<Layer, const LAYERS: usize> {
-    pub learning_rate: f64,
+pub struct ModelBuilder<Layer, const LAYERS: usize, const LEARNING_RATE: usize> {
     pub memory_layout: [Layer; LAYERS],
     pub activation_layout: [ActFn; LAYERS],
 }
 
 #[repr(align(64))]
-pub struct Arena<const LAYERS: usize> {
+pub struct Arena<const LAYERS: usize, const LEARNING_RATE: usize> {
     pub ptr: *mut f64,
-    pub learning_rate: f64,
     pub total_elements: usize,
     pub packed_endpoints: [usize; LAYERS],
     pub packed_acts: [ActFn; LAYERS],
 }
 
-impl<const LAYERS: usize> ModelBuilder<Layer, LAYERS> {
-    pub fn allocate(self) -> Arena<LAYERS> {
+impl<const LAYERS: usize, const LEARNING_RATE: usize> ModelBuilder<Layer, LAYERS, LEARNING_RATE> {
+    pub fn allocate(self) -> Arena<LAYERS, LEARNING_RATE> {
         let mut packed_acts: [ActFn; LAYERS] = [ActFn::Linear; LAYERS];
         let mut packed_endpoints: [usize; LAYERS] = [0; LAYERS];
         let mut total_elements: usize = 0;
@@ -83,10 +82,8 @@ impl<const LAYERS: usize> ModelBuilder<Layer, LAYERS> {
             p as *mut f64
         };
 
-        let learning_rate = self.learning_rate;
         Arena {
             ptr: raw_ptr,
-            learning_rate,
             total_elements,
             packed_endpoints,
             packed_acts,
@@ -94,7 +91,7 @@ impl<const LAYERS: usize> ModelBuilder<Layer, LAYERS> {
     }
 }
 
-impl<const LAYERS: usize> Arena<LAYERS> {
+impl<const LAYERS: usize, const LEARNING_RATE: usize> Arena<LAYERS, LEARNING_RATE> {
     pub fn init(&mut self, init: InitFunc) {
         unsafe {
             let mut curr = self.ptr.add(self.total_elements);
@@ -129,9 +126,21 @@ impl<const LAYERS: usize> Arena<LAYERS> {
                 self.ptr = self.ptr.add(1);
             }
         }*/
-        for layer in 0..LAYERS {
+        let mut mat_ptr = self.ptr;
+        for layer in 0..LAYERS - 1 {
+            let start = self.packed_endpoints[layer];
+            let end = self.packed_endpoints[layer + 1];
             match self.packed_acts[layer] {
-                ActFn::Linear => {}
+                ActFn::Linear => unsafe {
+                    for _ in start..end {
+                        let mut activation = self.ptr.read();
+
+                        // inner matrix
+                        todo!();
+
+                        mat_ptr = mat_ptr.add(1);
+                    }
+                },
                 ActFn::ReLU => {}
                 ActFn::LReLU => {}
                 ActFn::Sigmoid => {}
